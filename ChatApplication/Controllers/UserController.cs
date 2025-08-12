@@ -92,7 +92,7 @@ namespace ChatApplication.Controllers
             {
                 return Json(user,JsonRequestBehavior.AllowGet);
             }
-            return Json(new { status = 200, message = "Not Fetch Data" });
+            return Json(new { status = 400, message = "Not Fetch Data" });
         }
         [HttpPost]
         public JsonResult LoginCheck(RequestLogin login)
