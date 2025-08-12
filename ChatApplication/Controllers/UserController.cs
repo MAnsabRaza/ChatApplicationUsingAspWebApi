@@ -95,12 +95,12 @@ namespace ChatApplication.Controllers
             {
                 return Json(new { status = 401, message = "Invalid password" });
             }
-            var token = ChatApplication.Helper.JwtHelper.GenerateToken(user.email, user.Id);
+           var token = ChatApplication.Models.JwtHelper.GenerateToken(user.email, user.Id);
             return Json(new
             {
                 status = 200,
                 message = "Login successful",
-                token = token
+                token=token
             });
         }
     }
