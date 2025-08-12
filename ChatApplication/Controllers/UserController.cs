@@ -33,36 +33,44 @@ namespace ChatApplication.Controllers
         [HttpPost]
         public JsonResult Create(User user)
         {
-            if(ModelState.IsValid)
+            if (ModelState.IsValid)
             {
-                if (user.Id > 0)
+                if (user.Id > 0) 
                 {
                     var existingUser = db.User.Find(user.Id);
                     if (existingUser != null)
                     {
-                        existingUser.current_date = user.current_date;
                         existingUser.name = user.name;
                         existingUser.email = user.email;
+                        existingUser.phone_number = user.phone_number;
+                        existingUser.address = user.address;
+                        existingUser.current_date = DateTime.Now;
+                        existingUser.roleId = user.roleId;
+                        existingUser.status = user.status;
+
                         if (!string.IsNullOrWhiteSpace(user.password))
                         {
                             existingUser.password = BCrypt.Net.BCrypt.HashPassword(user.password);
                         }
-                        existingUser.phone_number = user.phone_number;
-                        existingUser.address = user.address;
+
                         db.Entry(existingUser).State = EntityState.Modified;
                         db.SaveChanges();
-                        return Json(new { status = 200, message = "User Update Successfully" });
-                    }
-                    else
-                    {
-                        user.password=BCrypt.Net.BCrypt.HashPassword(user.password);
-                        db.User.Add(user);
-                        db.SaveChanges();
-                        return Json(new { status = 200, message = "User Created Successfully" });
+                        return Json(new { status = 200, message = "User updated successfully" });
                     }
                 }
+                else 
+                {
+                    user.password = BCrypt.Net.BCrypt.HashPassword(user.password);
+                    user.current_date = DateTime.Now;
+                    user.status = true;
+                    user.roleId = 1;
+                    db.User.Add(user);
+                    db.SaveChanges();
+                    return Json(new { status = 200, message = "User created successfully" });
+                }
             }
-            return Json(new { status = 200, message = "User Invalid" });
+
+            return Json(new { status = 400, message = "User invalid" });
         }
         [HttpPost]
         public JsonResult Delete(int id)
@@ -104,6 +112,10 @@ namespace ChatApplication.Controllers
                 return Json(new { status = 401, message = "Invalid password" });
             }
            var token = ChatApplication.Models.JwtHelper.GenerateToken(user.email, user.Id);
+            Session["userId"] = user.Id;
+            Session["userName"] = user.name;
+            Session["userEmail"] = user.email;
+            Session["userRole"] = user.roleId;
             return Json(new
             {
                 status = 200,

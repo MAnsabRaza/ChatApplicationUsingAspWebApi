@@ -130,3 +130,5 @@ D:\AspDotNet\Asp.Net Web Api MVC\ChatApplication\ChatApplication\bin\Microsoft.C
 D:\AspDotNet\Asp.Net Web Api MVC\ChatApplication\ChatApplication\obj\Debug\ChatAppl.565FB39C.Up2Date
 D:\AspDotNet\Asp.Net Web Api MVC\ChatApplication\ChatApplication\obj\Debug\ChatApplication.dll
 D:\AspDotNet\Asp.Net Web Api MVC\ChatApplication\ChatApplication\obj\Debug\ChatApplication.pdb
+D:\AspDotNet\Asp.Net Web Api MVC\ChatApplication\ChatApplication\obj\Debug\ChatApplication.Migrations.InitialCreate.resources
+D:\AspDotNet\Asp.Net Web Api MVC\ChatApplication\ChatApplication\obj\Debug\ChatApplication.csproj.GenerateResource.cache

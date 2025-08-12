@@ -6,18 +6,16 @@ using System.Web;
 
 namespace ChatApplication.Models
 {
-    public class User
+    public class Permission
     {
         public int Id { get; set; }
-        public DateTime current_date { get; set; }
-        public string name { get; set; }
-        public string email { get; set; }
-        public string password { get; set; }
-        public string phone_number { get; set; }
-        public string address { get; set; }
+        public string current_date {  get; set; }
         public bool status {  get; set; }
         public int roleId {  get; set; }
         [ForeignKey("roleId")]
         public virtual Role Role { get; set; }
+        public int moduleId {  get; set; }
+        [ForeignKey("moduleId")]
+        public virtual Module Module { get; set; }
     }
 }
