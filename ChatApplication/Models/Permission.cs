@@ -9,7 +9,7 @@ namespace ChatApplication.Models
     public class Permission
     {
         public int Id { get; set; }
-        public string current_date {  get; set; }
+        public DateTime current_date {  get; set; }
         public bool status {  get; set; }
         public int roleId {  get; set; }
         [ForeignKey("roleId")]
