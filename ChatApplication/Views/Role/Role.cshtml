@@ -21,7 +21,7 @@
             <div class="grid grid-cols-2 gap-2 m-2">
                 <div>
                     <label class="font-semibold">Current Date</label>
-                    <input id="current_date" name="current_date" class="w-full mt-1 p-2 border border-gray-300 rounded" type="date" />
+                    <input id="current_date" readonly name="current_date" class="w-full mt-1 p-2 border border-gray-300 rounded" type="date" />
                 </div>
                 <div>
                     <label class="font-semibold">Role Name</label>
@@ -51,6 +51,11 @@
     </div>
 </div>
 <script>
+    const getDate = () => {
+        const today = new Date();
+        return today.toISOString().split('T')[0];
+    }
+    document.getElementById('current_date').value = getDate();
     const tableBody = document.querySelector('#roleTable tbody');
     let editId = 0; 
     const getRole = async () => {
