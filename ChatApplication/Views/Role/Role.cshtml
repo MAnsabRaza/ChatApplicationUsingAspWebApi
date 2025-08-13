@@ -3,5 +3,143 @@
     ViewBag.Title = "Role";
 }
 
-<h2>Role</h2>
+<div class="max-w-6xl mx-auto">
+    <form id="roleForm">
+        <div class="shadow-lg rounded-xl bg-white p-3">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-semibold text-gray-700 flex items-center gap-2">
+                    <i class="fa-solid fa-boxes w-6 h-6"></i> Role
+                </h2>
+                <div>
+                    <button type="submit" class="mt-1 text-white bg-green-600 hover:bg-green-800 font-medium rounded-lg text-sm px-5 py-2.5">Save</button>
+                    <button type="reset" class="mt-1 text-white bg-yellow-400 hover:bg-yellow-500 font-medium rounded-lg text-sm px-5 py-2.5">Reset</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="shadow-lg rounded-xl bg-white p-3 mt-7">
+            <div class="grid grid-cols-2 gap-2 m-2">
+                <div>
+                    <label class="font-semibold">Current Date</label>
+                    <input id="current_date" name="current_date" class="w-full mt-1 p-2 border border-gray-300 rounded" type="date" />
+                </div>
+                <div>
+                    <label class="font-semibold">Role Name</label>
+                    <input id="role_name" name="role_name" class="w-full mt-1 p-2 border border-gray-300 rounded" type="text" />
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div class="shadow-md rounded-xl bg-white p-6 mt-7">
+        <h2 class="text-2xl font-semibold text-gray-700 flex items-center gap-2">
+            <i class="fa-solid fa-list-check w-6 h-6"></i> Role List
+        </h2>
+        <div class="overflow-x-auto mt-2">
+            <table class="min-w-full text-sm text-left" id="roleTable">
+                <thead class="bg-gray-100 text-xs uppercase text-gray-500">
+                    <tr>
+                        <th class="px-4 py-2">ID</th>
+                        <th class="px-4 py-2">Current Date</th>
+                        <th class="px-4 py-2">Role Name</th>
+                        <th class="px-4 py-2">Action</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script>
+    const tableBody = document.querySelector('#roleTable tbody');
+    let editId = 0; 
+    const getRole = async () => {
+        try {
+            const resp = await fetch('/Role/Get');
+            const data = await resp.json();
+            if (Array.isArray(data)) { 
+                tableBody.innerHTML = "";
+                data.forEach(role => {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td class="px-4 py-2">${role.Id}</td>
+                        <td class="px-4 py-2">${role.current_date ? role.current_date.split('T')[0] : ''}</td>
+                        <td class="px-4 py-2">${role.role_name}</td>
+                        <td class="px-4 py-2">
+                            <button onclick="editRole(${role.Id})" class="text-blue-600 hover:underline">Edit</button>
+                            <button onclick="deleteRole(${role.Id})" class="text-red-600 hover:underline ml-2">Delete</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+            } else {
+                tableBody.innerHTML = `<tr><td colspan="4" class="text-center py-2">No roles found</td></tr>`;
+            }
+        } catch (error) {
+            console.log('Error fetching roles', error);
+        }
+    };
+
+    const deleteRole = async (id) => {
+        if (!confirm("Are you sure?")) return;
+        try {
+            const res = await fetch('/Role/Delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+            const data = await res.json();
+            alert(data.message);
+            if (data.status === 200) {
+                getRole();
+            }
+        } catch (error) {
+            console.log('Error deleting role', error);
+        }
+    };
+
+    const editRole = async (id) => {
+        try {
+            const resp = await fetch(`/Role/Edit?id=${id}`);
+            const role = await resp.json();
+            if (role && role.Id) {
+                document.getElementById('current_date').value = role.current_date ? role.current_date.split('T')[0] : '';
+                document.getElementById('role_name').value = role.role_name;
+                editId = role.Id;
+            }
+        } catch (error) {
+            console.log('Error fetching role for edit', error);
+        }
+    };
+
+    document.getElementById('roleForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        let saveObj = {
+            Id: editId,
+            current_date: document.getElementById('current_date').value.trim(),
+            role_name: document.getElementById('role_name').value.trim()
+        };
+
+        try {
+            const resp = await fetch('/Role/Create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(saveObj),
+            });
+            const data = await resp.json();
+            alert(data.message);
+            if (data.status === 200) {
+                this.reset();
+                editId = 0;
+                getRole();
+            }
+        } catch (error) {
+            console.error('Error saving role:', error);
+            alert('Something went wrong');
+        }
+    });
+
+    getRole();
+</script>
 

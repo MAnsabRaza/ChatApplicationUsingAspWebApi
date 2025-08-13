@@ -34,7 +34,7 @@ namespace ChatApplication.Controllers
                     if (existingRole != null)
                     {
                         existingRole.current_date = DateTime.Now;
-                        existingRole.role_name = existingRole.role_name;
+                        existingRole.role_name = role.role_name;
                         db.Entry(existingRole).State = EntityState.Modified;
                         db.SaveChanges();
                         return Json(new { status = 200, message = "Role updated successfully" });
