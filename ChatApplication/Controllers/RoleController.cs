@@ -19,7 +19,21 @@ namespace ChatApplication.Controllers
         [HttpGet]
         public JsonResult Get()
         {
-            var role = db.Role.ToList();
+            var role = db.Role.
+                Select(r => new
+                {
+                    r.Id,
+                    r.role_name,
+                    current_date = r.current_date,
+                  
+                })
+                .ToList()
+                .Select(r => new
+                {
+                    r.Id,
+                    current_date = r.current_date.ToString("yyyy-MM-dd"),
+                     r.role_name,
+                });
             return Json(role,JsonRequestBehavior.AllowGet); 
         }
         [HttpPost]
@@ -70,7 +84,13 @@ namespace ChatApplication.Controllers
             var role = db.Role.Find(id);
             if(role != null)
             {
-                return Json(role ,JsonRequestBehavior.AllowGet);
+                var result = new
+                {
+                    role.Id,
+                    current_date = role.current_date.ToString("yyyy-MM-dd"),
+                    role.role_name,
+                };
+                return Json(result, JsonRequestBehavior.AllowGet);
             }
             return Json(new { status = 400, message = "Not Fetch Data" });
         }

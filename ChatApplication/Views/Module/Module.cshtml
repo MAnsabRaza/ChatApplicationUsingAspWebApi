@@ -29,8 +29,6 @@
                     <input id="module_name" name="module_name" class="w-full mt-1 p-2 border border-gray-300 rounded" type="text" required />
                 </div>
             </div>
-        </div>
-        <div class="shadow-lg rounded-xl bg-white p-3 mt-7">
             <div class="grid grid-cols-2 gap-2 m-2">
                 <div>
                     <label class="font-semibold">Module Icon</label>
@@ -69,7 +67,11 @@
     const getDate = () => {
         const today = new Date();
         return today.toISOString().split('T')[0];
-    }
+    };
+    const formatDateForDisplay = (dateString) => {
+        if (!dateString) return '';
+        return dateString;
+    };
     document.getElementById('current_date').value = getDate();
     const tableBody = document.querySelector('#moduleTable tbody');
     let editId = 0;
@@ -83,7 +85,7 @@
                     const tr = document.createElement("tr");
                     tr.innerHTML = `
                         <td class="px-4 py-2">${mod.Id}</td>
-                        <td class="px-4 py-2">${mod.current_date ? mod.current_date.split('T')[0] : ''}</td>
+                        <td class="px-4 py-2">${formatDateForDisplay(mod.current_date) ? mod.current_date.split('T')[0] : ''}</td>
                         <td class="px-4 py-2">${mod.module_name}</td>
                          <td class="px-4 py-2">${mod.module_icon}</td>
                           <td class="px-4 py-2">${mod.href}</td>
@@ -157,6 +159,7 @@
             alert(data.message);
             if (data.status === 200) {
                 this.reset();
+                document.getElementById('current_date').value = getDate();
                 editId = 0;
                 getModule();
             }

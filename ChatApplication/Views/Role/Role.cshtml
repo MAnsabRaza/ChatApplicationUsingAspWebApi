@@ -8,7 +8,7 @@
         <div class="shadow-lg rounded-xl bg-white p-3">
             <div class="flex justify-between items-center">
                 <h2 class="text-2xl font-semibold text-gray-700 flex items-center gap-2">
-                    <i class="fa-solid fa-boxes w-6 h-6"></i> Role
+                    <i class="fa-solid fa-user-shield w-6 h-6"></i> Role
                 </h2>
                 <div>
                     <button type="submit" class="mt-1 text-white bg-green-600 hover:bg-green-800 font-medium rounded-lg text-sm px-5 py-2.5">Save</button>
@@ -51,6 +51,10 @@
     </div>
 </div>
 <script>
+    const formatDateForDisplay = (dateString) => {
+        if (!dateString) return '';
+        return dateString;
+    };
     const getDate = () => {
         const today = new Date();
         return today.toISOString().split('T')[0];
@@ -68,7 +72,7 @@
                     const tr = document.createElement("tr");
                     tr.innerHTML = `
                         <td class="px-4 py-2">${role.Id}</td>
-                        <td class="px-4 py-2">${role.current_date ? role.current_date.split('T')[0] : ''}</td>
+                        <td class="px-4 py-2">${formatDateForDisplay(role.current_date) ? role.current_date.split('T')[0] : ''}</td>
                         <td class="px-4 py-2">${role.role_name}</td>
                         <td class="px-4 py-2">
                             <button onclick="editRole(${role.Id})" class="text-blue-600 hover:underline">Edit</button>
@@ -136,6 +140,7 @@
             alert(data.message);
             if (data.status === 200) {
                 this.reset();
+                document.getElementById('current_date').value = getDate();
                 editId = 0;
                 getRole();
             }

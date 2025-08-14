@@ -1,7 +1,238 @@
-﻿
-@{
+﻿@{
     ViewBag.Title = "Permission";
 }
 
-<h2>Permission</h2>
+<div class="max-w-6xl mx-auto">
+    <form id="permissionForm">
+        <div class="shadow-lg rounded-xl bg-white p-3">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-semibold text-gray-700 flex items-center gap-2">
+                    <i class="fa-solid fa-lock w-6 h-6"></i> Permission
+                </h2>
+                <div>
+                    <button type="submit" class="mt-1 text-white bg-green-600 hover:bg-green-800 font-medium rounded-lg text-sm px-5 py-2.5">Save</button>
+                    <button type="reset" class="mt-1 text-white bg-yellow-400 hover:bg-yellow-500 font-medium rounded-lg text-sm px-5 py-2.5">Reset</button>
+                </div>
+            </div>
+        </div>
 
+        <div class="shadow-lg rounded-xl bg-white p-3 mt-7">
+            <div class="grid grid-cols-2 gap-2 m-2">
+                <div>
+                    <label class="font-semibold">Current Date</label>
+                    <input id="current_date" readonly name="current_date" class="w-full mt-1 p-2 border border-gray-300 rounded" type="date" required />
+                </div>
+                <div class="flex items-center space-x-3">
+                    <label for="status" class="font-semibold text-gray-700 cursor-pointer select-none">
+                        Status
+                    </label>
+                    <input type="checkbox"
+                           id="status"
+                           name="status"
+                           class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 transform scale-150 cursor-pointer"
+                           >
+                </div>
+
+        </div>
+            <div class="grid grid-cols-2 gap-2 m-2">
+                <div>
+                    <label class="font-semibold">Role</label>
+                    <select id="roleId" name="roleId" class="w-full mt-1 p-2 border border-gray-300 rounded">
+                    </select>
+                </div>
+                <div>
+                    <label class="font-semibold">Module</label>
+                    <select id="moduleId" name="moduleId" class="w-full mt-1 p-2 border border-gray-300 rounded">
+                        <option>Select Module</option>
+                    </select>
+                </div>
+                </div>
+        </div>
+    </form>
+
+    <div class="shadow-md rounded-xl bg-white p-6 mt-7">
+        <h2 class="text-2xl font-semibold text-gray-700 flex items-center gap-2">
+            <i class="fa-solid fa-list-check w-6 h-6"></i> Permission List
+        </h2>
+        <div class="overflow-x-auto mt-2">
+            <table class="min-w-full text-sm text-left" id="permissionTable">
+                <thead class="bg-gray-100 text-xs uppercase text-gray-500">
+                    <tr>
+                        <th class="px-4 py-2">ID</th>
+                        <th class="px-4 py-2">Current Date</th>
+                        <th class="px-4 py-2">Status</th>
+                        <th class="px-4 py-2">Role</th>
+                        <th class="px-4 py-2">Module</th>
+                        <th class="px-4 py-2">Action</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const getStatusColor = (status) => {
+        switch (status?.toLowerCase()) {
+            case 'Active': return 'bg-green-100 text-green-800';
+            case 'Inactive': return 'bg-red-100 text-red-800';
+            default: return 'bg-gray-100 text-gray-800';
+        }
+    }
+    const loadRoles = async () => {
+        try {
+            const resp = await fetch('/Role/Get');
+            const roles = await resp.json();
+            const roleSelect = document.getElementById('roleId');
+            roleSelect.innerHTML = '<option value="">Select Role</option>';
+            roles.forEach(role => {
+                let opt = document.createElement('option');
+                opt.value = role.Id;
+                opt.textContent = role.role_name;
+                roleSelect.appendChild(opt);
+            });
+        } catch (error) {
+            console.error('Error loading roles', error);
+        }
+    };
+
+    const loadModules = async () => {
+        try {
+            const resp = await fetch('/Module/Get');
+            const modules = await resp.json();
+            const moduleSelect = document.getElementById('moduleId');
+            moduleSelect.innerHTML = '<option value="">Select Module</option>';
+            modules.forEach(module => {
+                let opt = document.createElement('option');
+                opt.value = module.Id;
+                opt.textContent = module.module_name;
+                moduleSelect.appendChild(opt);
+            });
+        } catch (err) {
+            console.error('Error loading modules', err);
+        }
+    };
+
+    const getDate = () => {
+        const today = new Date();
+        return today.toISOString().split('T')[0];
+    };
+    document.getElementById('current_date').value = getDate();
+
+    const tableBody = document.querySelector('#permissionTable tbody');
+    let editId = 0;
+    const formatDateForDisplay = (dateString) => {
+        if (!dateString) return '';
+        return dateString;
+    };
+
+    const getPermission = async () => {
+        try {
+            const resp = await fetch('/Permission/Get');
+            const data = await resp.json();
+            if (Array.isArray(data) && data.length) {
+                tableBody.innerHTML = "";
+                data.forEach(per => {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                    <td class="px-4 py-2">${per.Id}</td>
+                    <td class="px-4 py-2">${formatDateForDisplay(per.current_date)}</td>
+                    <td class="px-4 py-2">
+    <span class="px-2 py-1 rounded ${getStatusColor(per.status ? 'Active' : 'Inactive')}">
+        ${per.status ? 'Active' : 'Inactive'}
+    </span>
+</td>
+
+                    <td class="px-4 py-2">${per.roleName}</td>
+                    <td class="px-4 py-2">${per.moduleName}</td>
+                    <td class="px-4 py-2">
+                        <button onclick="editPermission(${per.Id})" class="text-blue-600 hover:underline">Edit</button>
+                        <button onclick="deletePermission(${per.Id})" class="text-red-600 hover:underline ml-2">Delete</button>
+                    </td>
+                `;
+                    tableBody.appendChild(tr);
+                });
+            } else {
+                tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-2">No Permission found</td></tr>`;
+            }
+        } catch (error) {
+            console.error('Error fetching Permission', error);
+        }
+    };
+
+    const deletePermission = async (id) => {
+        if (!confirm("Are you sure?")) return;
+        try {
+            const res = await fetch('/Permission/Delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+            const data = await res.json();
+            alert(data.message);
+            if (data.status === 200) {
+                getPermission();
+            }
+        } catch (error) {
+            console.error('Error deleting Permission', error);
+        }
+    };
+
+    const editPermission = async (id) => {
+        try {
+            const resp = await fetch(`/Permission/Edit?id=${id}`);
+            const permission = await resp.json();
+            if (permission && permission.Id) {
+                document.getElementById('current_date').value = permission.current_date;
+                document.getElementById('moduleId').value = permission.moduleId;
+                document.getElementById('roleId').value = permission.roleId;
+                document.getElementById('status').checked = permission.status;
+                editId = permission.Id;
+            }
+        } catch (error) {
+            console.error('Error fetching Permission for edit', error);
+        }
+    };
+
+    document.getElementById('permissionForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        let saveObj = {
+            Id: editId,
+            current_date: document.getElementById('current_date').value.trim(),
+            moduleId: document.getElementById('moduleId').value,
+            roleId: document.getElementById('roleId').value,
+            status: document.getElementById('status').checked
+        };
+
+        try {
+            const resp = await fetch('/Permission/Create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(saveObj),
+            });
+            const data = await resp.json();
+            alert(data.message);
+            if (data.status === 200) {
+                this.reset();
+                document.getElementById('current_date').value = getDate();
+                editId = 0;
+                getPermission();
+            }
+        } catch (error) {
+            console.error('Error saving Permission:', error);
+            alert('Something went wrong');
+        }
+    });
+
+    document.querySelector('button[type="reset"]').addEventListener('click', function () {
+        editId = 0;
+        document.getElementById('current_date').value = getDate();
+    });
+
+    loadRoles();
+    loadModules();
+    getPermission();
+
+</script>

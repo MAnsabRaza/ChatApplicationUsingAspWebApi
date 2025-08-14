@@ -27,7 +27,34 @@ namespace ChatApplication.Controllers
         [HttpGet]
         public JsonResult Get()
         {
-            var user = db.User.ToList();
+            var user = db.User.
+                Include(r=>r.Role).
+               Select(u => new
+               {
+                   u.Id,
+                   current_date = u.current_date,
+                   roleId=u.Role.role_name,
+                   u.name,
+                   u.email,
+                   u.password,
+                   u.phone_number,
+                   u.address,
+                   u.status
+               })
+                .ToList()
+                .Select(u => new
+                {
+                    u.Id,
+                    current_date = u.current_date.ToString("yyyy-MM-dd"),
+                    roleId = u.roleId,
+                    u.name,
+                    u.email,
+                    u.password,
+                    u.phone_number,
+                    u.address,
+                    u.status
+                  
+                });
             return Json(user,JsonRequestBehavior.AllowGet); 
         }
         [HttpPost]
@@ -122,6 +149,11 @@ namespace ChatApplication.Controllers
                 message = "Login successful",
                 token=token
             });
+        }
+        public ActionResult Logout()
+        {
+            Session.Clear();
+            return RedirectToAction("Login");
         }
     }
 }

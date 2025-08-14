@@ -19,7 +19,25 @@ namespace ChatApplication.Controllers
         [HttpGet]
         public JsonResult Get()
         {
-            var module = db.Module.ToList();
+            var module = db.Module.
+                 Select(m => new
+                 {
+                     m.Id,
+                     m.module_name,
+                     m.module_icon,
+                     m.href,
+                     current_date = m.current_date,
+
+                 })
+                .ToList()
+                .Select(m => new
+                {
+                    m.Id,
+                    current_date = m.current_date.ToString("yyyy-MM-dd"),
+                    m.module_icon,
+                    m.module_name,
+                    m.href
+                });
             return Json(module,JsonRequestBehavior.AllowGet);
         }
         [HttpPost]
@@ -69,7 +87,15 @@ namespace ChatApplication.Controllers
             var module = db.Module.Find(id);
             if (module != null)
             {
-                return Json(module, JsonRequestBehavior.AllowGet);
+                var result = new
+                {
+                    module.Id,
+                    current_date = module.current_date.ToString("yyyy-MM-dd"),
+                    module.module_name,
+                    module.module_icon,
+                    module.href
+                };
+                return Json(result, JsonRequestBehavior.AllowGet);
             }
             return Json(new { status = 400, message = "Not Fetch Data" }); 
         }
