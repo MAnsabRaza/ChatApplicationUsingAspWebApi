@@ -24,39 +24,57 @@ namespace ChatApplication.Controllers
         {
             return View();
         }
-        [HttpGet]
-        public JsonResult Get()
+        [HttpPost]
+        public JsonResult CreateRegistration(User user)
         {
-            var user = db.User.
-                Include(r=>r.Role).
-               Select(u => new
-               {
-                   u.Id,
-                   current_date = u.current_date,
-                   roleId=u.Role.role_name,
-                   u.name,
-                   u.email,
-                   u.password,
-                   u.phone_number,
-                   u.address,
-                   u.status
-               })
+            if (ModelState.IsValid)
+            {
+                user.password = BCrypt.Net.BCrypt.HashPassword(user.password);
+                user.current_date = DateTime.Now;
+                user.status = true;
+                user.roleId = 1;
+                db.User.Add(user);
+                db.SaveChanges();
+                return Json(new { status = 200, message = "User created successfully" });
+            }
+            return Json(new { status = 400, message = "Invalid" });
+        }
+        [HttpGet]
+        public JsonResult GetUser()
+        {
+            var user= db.User
+                .Include(r => r.Role)
+                .Select(u => new
+                {
+                    u.Id,
+                    current_date = u.current_date,
+                    u.status,
+                    roleId = u.roleId,
+                    roleName = u.Role.role_name,
+                    u.name,
+                   // u.password,
+                    u.email,
+                    u.phone_number,
+                    u.address,
+                })
                 .ToList()
                 .Select(u => new
                 {
                     u.Id,
                     current_date = u.current_date.ToString("yyyy-MM-dd"),
+                    u.status,
                     roleId = u.roleId,
+                    roleName = u.roleName,
                     u.name,
+                    //u.password,
                     u.email,
-                    u.password,
                     u.phone_number,
                     u.address,
-                    u.status
-                  
                 });
-            return Json(user,JsonRequestBehavior.AllowGet); 
+            return Json(user, JsonRequestBehavior.AllowGet);
         }
+
+
         [HttpPost]
         public JsonResult Create(User user)
         {
@@ -89,8 +107,6 @@ namespace ChatApplication.Controllers
                 {
                     user.password = BCrypt.Net.BCrypt.HashPassword(user.password);
                     user.current_date = DateTime.Now;
-                    user.status = true;
-                    user.roleId = 1;
                     db.User.Add(user);
                     db.SaveChanges();
                     return Json(new { status = 200, message = "User created successfully" });
@@ -122,33 +138,92 @@ namespace ChatApplication.Controllers
             return Json(new { status = 400, message = "Not Fetch Data" });
         }
         [HttpPost]
+        [HttpPost]
         public JsonResult LoginCheck(RequestLogin login)
         {
-            if(string.IsNullOrWhiteSpace(login.email) && string.IsNullOrWhiteSpace(login.password))
+            if (string.IsNullOrWhiteSpace(login.email) && string.IsNullOrWhiteSpace(login.password))
             {
                 return Json(new { status = 400, message = "Email and password are required" });
             }
-            var user=db.User.FirstOrDefault(u=>u.email == login.email);
+
+            var user = db.User.FirstOrDefault(u => u.email == login.email);
             if (user == null)
             {
                 return Json(new { status = 404, message = "User not found" });
             }
+
+            if (user.status != true)
+            {
+                return Json(new { status = 403, message = "Your account is inactive. Please contact admin." });
+            }
+
             bool isPasswordValid = BCrypt.Net.BCrypt.Verify(login.password, user.password);
             if (!isPasswordValid)
             {
                 return Json(new { status = 401, message = "Invalid password" });
             }
-           var token = ChatApplication.Models.JwtHelper.GenerateToken(user.email, user.Id);
+
+            var token = ChatApplication.Models.JwtHelper.GenerateToken(user.email, user.Id);
+
+            // Get user modules
+            var userModules = GetUserModules(user.Id);
+
+            // Store user info in session
             Session["userId"] = user.Id;
             Session["userName"] = user.name;
             Session["userEmail"] = user.email;
             Session["userRole"] = user.roleId;
+
+            // Store modules in separate sessions
+            Session["moduleNames"] = userModules.Select(m => m.module_name).ToArray();
+            Session["moduleIcons"] = userModules.Select(m => m.module_icon).ToArray();
+            Session["moduleUrls"] = userModules.Select(m => m.href).ToArray();
+
             return Json(new
             {
                 status = 200,
                 message = "Login successful",
-                token=token
+                token = token,
+                modules = userModules.Select(m => new {
+                    name = m.module_name,
+                    icon = m.module_icon,
+                    url = m.href
+                })
             });
+        }
+
+        private List<Module> GetUserModules(int userId)
+        {
+            var modules = (from m in db.Module
+                           join p in db.Permission on m.Id equals p.moduleId
+                           join r in db.Role on p.roleId equals r.Id
+                           join u in db.User on r.Id equals u.roleId
+                           where p.status == true && u.Id == userId
+                           select m).ToList();
+
+            return modules;
+        }
+
+        [HttpGet]
+        public JsonResult Edit(int id)
+        {
+            var user= db.User.Find(id);
+            if (user != null)
+            {
+                var result = new
+                {
+                    user.Id,
+                    current_date = user.current_date.ToString("yyyy-MM-dd"),
+                    user.status,
+                    user.roleId,
+                    user.name,
+                    user.email,
+                    user.phone_number,
+                    user.address
+                };
+                return Json(result, JsonRequestBehavior.AllowGet);
+            }
+            return Json(new { status = 400, message = "Permission not found" });
         }
         public ActionResult Logout()
         {

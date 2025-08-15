@@ -26,7 +26,7 @@
                 </div>
                 <div>
                     <label class="font-semibold">Name</label>
-                    <input id="name" readonly name="name" class="w-full mt-1 p-2 border border-gray-300 rounded" type="text" required />
+                    <input id="name" name="name" class="w-full mt-1 p-2 border border-gray-300 rounded" type="text" required />
                 </div>
 
             </div>
@@ -34,11 +34,11 @@
             <div class="grid grid-cols-2 gap-2 m-2">
                 <div>
                     <label class="font-semibold">Email</label>
-                    <input id="email" readonly name="email" class="w-full mt-1 p-2 border border-gray-300 rounded" type="email" required />
+                    <input id="email" name="email" class="w-full mt-1 p-2 border border-gray-300 rounded" type="email" required />
                 </div>
                 <div>
                     <label class="font-semibold">Password</label>
-                    <input id="password" readonly name="password" class="w-full mt-1 p-2 border border-gray-300 rounded" type="password" required />
+                    <input id="password" name="password" class="w-full mt-1 p-2 border border-gray-300 rounded" type="password" required />
                 </div>
 
             </div>
@@ -46,11 +46,11 @@
             <div class="grid grid-cols-2 gap-2 m-2">
                 <div>
                     <label class="font-semibold">Phone Number</label>
-                    <input id="phone_number" readonly name="phone_number" class="w-full mt-1 p-2 border border-gray-300 rounded" type="tel" required />
+                    <input id="phone_number" name="phone_number" class="w-full mt-1 p-2 border border-gray-300 rounded" type="tel" required />
                 </div>
                 <div>
                     <label class="font-semibold">Address</label>
-                    <input id="address" readonly name="address" class="w-full mt-1 p-2 border border-gray-300 rounded" type="text" required />
+                    <input id="address"  name="address" class="w-full mt-1 p-2 border border-gray-300 rounded" type="text" required />
                 </div>
 
             </div>
@@ -80,14 +80,17 @@
             <i class="fa-solid fa-list-check w-6 h-6"></i> User List
         </h2>
         <div class="overflow-x-auto mt-2">
-            <table class="min-w-full text-sm text-left" id="permissionTable">
+            <table class="min-w-full text-sm text-left" id="userTable">
                 <thead class="bg-gray-100 text-xs uppercase text-gray-500">
                     <tr>
                         <th class="px-4 py-2">ID</th>
                         <th class="px-4 py-2">Current Date</th>
-                        <th class="px-4 py-2">Status</th>
+                        <th class="px-4 py-2">Name</th>
+                        <th class="px-4 py-2">Email</th>
+                        <th class="px-4 py-2">Phone Number</th>
+                        <th class="px-4 py-2">Address</th>
                         <th class="px-4 py-2">Role</th>
-                        <th class="px-4 py-2">Module</th>
+                        <th class="px-4 py-2">Status</th>
                         <th class="px-4 py-2">Action</th>
                     </tr>
                 </thead>
@@ -129,27 +132,28 @@
     };
     document.getElementById('current_date').value = getDate();
 
-    const tableBody = document.querySelector('#userForm tbody');
     let editId = 0;
     const formatDateForDisplay = (dateString) => {
         if (!dateString) return '';
         return dateString;
     };
+    const tableBody = document.querySelector('#userTable tbody');
+
 
     const getUser= async () => {
         try {
-            const resp = await fetch('/User/Get');
+            const resp = await fetch('/User/GetUser');
             const data = await resp.json();
+            console.log(data);
             if (Array.isArray(data)) {
                 tableBody.innerHTML = "";
                 data.forEach(user => {
                     const tr = document.createElement("tr");
                     tr.innerHTML = `
                  <td class="px-4 py-2">${user.Id}</td>
-                 <td class="px-4 py-2">${formatDateForDisplay(user.current_date) ? mod.current_date.split('T')[0] : ''}</td>
+                 <td class="px-4 py-2">${formatDateForDisplay(user.current_date) ? user.current_date.split('T')[0] : ''}</td>
                  <td class="px-4 py-2">${user.name}</td>
                  <td class="px-4 py-2">${user.email}</td>
-                 <td class="px-4 py-2">${user.password}</td>
                  <td class="px-4 py-2">${user.phone_number}</td>
                  <td class="px-4 py-2">${user.address}</td>
                  <td class="px-4 py-2">${user.status}</td>
@@ -164,9 +168,8 @@
             } else {
                 tableBody.innerHTML = `<tr><td colspan="4" class="text-center py-2">No roles found</td></tr>`;
             }
-        }
         } catch (error) {
-            console.error('Error fetching Permission', error);
+            console.error('Error fetching User', error);
         }
     };
 
@@ -181,7 +184,7 @@
             const data = await res.json();
             alert(data.message);
             if (data.status === 200) {
-                getPermission();
+                getUser();
             }
         } catch (error) {
             console.error('Error deleting Permission', error);
@@ -191,13 +194,17 @@
     const editUser= async (id) => {
         try {
             const resp = await fetch(`/User/Edit?id=${id}`);
-            const permission = await resp.json();
-            if (permission && permission.Id) {
-                document.getElementById('current_date').value = permission.current_date;
-                document.getElementById('moduleId').value = permission.moduleId;
-                document.getElementById('roleId').value = permission.roleId;
-                document.getElementById('status').checked = permission.status;
-                editId = permission.Id;
+            const user = await resp.json();
+            if (user && user.Id) {
+                document.getElementById('current_date').value = user.current_date;
+                document.getElementById('name').value = user.name;
+                document.getElementById('email').value = user.email;
+                document.getElementById('password').value = user.password;
+                document.getElementById('phone_number').value = user.phone_number;
+                document.getElementById('address').value = user.address;
+                document.getElementById('status').value = user.status;
+                document.getElementById('roleId').value = user.roleId;
+                editId = user.Id;
             }
         } catch (error) {
             console.error('Error fetching Permission for edit', error);
@@ -210,13 +217,17 @@
         let saveObj = {
             Id: editId,
             current_date: document.getElementById('current_date').value.trim(),
-            moduleId: document.getElementById('moduleId').value,
             roleId: document.getElementById('roleId').value,
-            status: document.getElementById('status').checked
+            status: document.getElementById('status').checked,
+            name: document.getElementById('name').value,
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value,
+            phone_number: document.getElementById('phone_number').value,
+            address: document.getElementById('address').value,
         };
 
         try {
-            const resp = await fetch('/Permission/Create', {
+            const resp = await fetch('/User/Create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(saveObj),

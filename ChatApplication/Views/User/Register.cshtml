@@ -111,7 +111,7 @@
             address: document.getElementById('address').value.trim(),
         };
         try {
-            const res =await fetch('/User/Create', {
+            const res = await fetch('/User/CreateRegistration', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
