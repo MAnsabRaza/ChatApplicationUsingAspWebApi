@@ -315,10 +315,10 @@
     <Content Include="Views\Shared\_AuthLayout.cshtml" />
     <Content Include="Views\Module\Module.cshtml" />
     <Content Include="Views\Permission\Permission.cshtml" />
+    <Content Include="Views\Home\Home.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
-    <Folder Include="Views\Home\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Scripts\bootstrap.min.js.map" />

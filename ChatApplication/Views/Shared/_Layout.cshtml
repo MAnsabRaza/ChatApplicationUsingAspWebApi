@@ -52,7 +52,6 @@
                         <div class="flex items-center space-x-3 glass-effect px-4 py-2 rounded-full">
                             <i class="fas fa-user-circle text-lg"></i>
                             <span class="text-lg font-medium">Welcome, @Session["userName"]</span>
-                            <span class="text-lg font-medium">Welcome, @Session["moduleNames"]</span>
 
                         </div>
                     }
@@ -64,66 +63,82 @@
     <div class="flex flex-1">
         <aside class="w-72 bg-white shadow-lg p-6 border-r border-gray-300">
             <div class="mb-8">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4">Navigation</h2>
+                @if (Session["userRoleName"] != null)
+                {
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4 ml-1">@Session["userRoleName"]</h2>
+                }
             </div>
             <ul class="space-y-3">
-                <li>
-                    <a href="@Url.Action("Home", "Home")" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100 hover:text-gray-900 font-medium transition-all duration-300">
-                        <i class="fa-solid fa-home"></i>
-                        <span>Home</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="@Url.Action("Chat", "Chat")" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100 hover:text-gray-900 font-medium transition-all duration-300">
-                        <i class="fa-solid fa-message"></i>
-                        <span>Chat</span>
-                    </a>
-                </li>
-                <li class="relative">
-                    <button class="settings-toggle flex justify-between items-center w-full px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100 hover:text-gray-900 font-medium transition-all duration-300">
-                        <span class="flex items-center space-x-3">
-                            <i class="fa-solid fa-gear"></i>
-                            <span>Settings</span>
-                        </span>
-                        <i class="fa-solid fa-chevron-down"></i>
-                    </button>
-
-                    <ul class="settings-menu hidden pl-10 mt-2 space-y-2">
-                        <li>
-                            <a href="@Url.Action("User", "User")" class="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
-                                <i class="fa-solid fa-users"></i>
-                                <span>User</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="@Url.Action("Role", "Role")" class="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
-                                <i class="fa-solid fa-user-shield"></i>
-                                <span>Role</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="@Url.Action("Module", "Module")" class="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
-                                <i class="fa-solid fa-cubes"></i>
-                                <span>Module</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="@Url.Action("Permission", "Permission")" class="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
-                                <i class="fa-solid fa-lock"></i>
-                                <span>Permission</span>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-
+                @if (Session["userModules"] != null)
+                {
+                    var modules = Session["userModules"] as List<ChatApplication.Models.Module>;
+                    if (modules != null)
+                    {
+                        foreach (var module in modules)
+                        {
+                            <li>
+                                <a href="@module.href"
+                                   class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700
+                          hover:bg-gray-100 hover:text-gray-900 font-medium transition-all duration-300">
+                                    <i class="@module.module_icon"></i>
+                                    <span>@module.module_name</span>
+                                </a>
+                            </li>
+                        }
+                    }
+                }
+                @if (Session["userRoleName"] != null && Session["userRoleName"].ToString().Equals("Admin", StringComparison.OrdinalIgnoreCase))
+                {
+                    <li class="relative">
+                        <button class="settings-toggle flex justify-between items-center w-full px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100 hover:text-gray-900 font-medium transition-all duration-300">
+                            <span class="flex items-center space-x-3">
+                                <i class="fa-solid fa-gear"></i>
+                                <span>Settings</span>
+                            </span>
+                            <i class="fa-solid fa-chevron-down transition-transform duration-200"></i>
+                        </button>
+                        <ul class="settings-menu hidden pl-10 mt-2 space-y-3">
+                            <li>
+                                <a href="@Url.Action("User", "User")"
+                                   class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100 hover:text-gray-900 font-medium transition-all duration-300">
+                                    <i class="fa-solid fa-users"></i>
+                                    <span>User</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="@Url.Action("Role", "Role")"
+                                   class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100 hover:text-gray-900 font-medium transition-all duration-300">
+                                    <i class="fa-solid fa-user-shield"></i>
+                                    <span>Role</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="@Url.Action("Module", "Module")"
+                                   class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100 hover:text-gray-900 font-medium transition-all duration-300">
+                                    <i class="fa-solid fa-cubes"></i>
+                                    <span>Module</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="@Url.Action("Permission", "Permission")"
+                                   class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100 hover:text-gray-900 font-medium transition-all duration-300">
+                                    <i class="fa-solid fa-lock"></i>
+                                    <span>Permission</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                }
                 <li class="pt-4 border-t border-gray-300 mt-6">
-                    <a href="@Url.Action("Logout", "User")" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 hover:text-red-700 font-medium transition-all duration-300">
+                    <a href="@Url.Action("Logout", "User")"
+                       class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 hover:text-red-700 font-medium transition-all duration-300">
                         <i class="fa fa-sign-out"></i>
                         <span>Logout</span>
                     </a>
                 </li>
             </ul>
         </aside>
+
 
         <main class="flex-1 p-8 bg-gray-100">
             @RenderBody()
@@ -148,6 +163,20 @@
         $('.sidebar-link').each(function() {
             if ($(this).attr('href') === currentPath) {
                 $(this).addClass('active-link');
+            }
+        });
+        document.addEventListener('DOMContentLoaded', function () {
+            const settingsToggle = document.querySelector('.settings-toggle');
+            const settingsMenu = document.querySelector('.settings-menu');
+            const chevronIcon = settingsToggle?.querySelector('.fa-chevron-down');
+
+            if (settingsToggle && settingsMenu) {
+                settingsToggle.addEventListener('click', function () {
+                    settingsMenu.classList.toggle('hidden');
+                    if (chevronIcon) {
+                        chevronIcon.classList.toggle('rotate-180');
+                    }
+                });
             }
         });
 

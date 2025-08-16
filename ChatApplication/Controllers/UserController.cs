@@ -32,7 +32,7 @@ namespace ChatApplication.Controllers
                 user.password = BCrypt.Net.BCrypt.HashPassword(user.password);
                 user.current_date = DateTime.Now;
                 user.status = true;
-                user.roleId = 1;
+                user.roleId = 2;
                 db.User.Add(user);
                 db.SaveChanges();
                 return Json(new { status = 200, message = "User created successfully" });
@@ -138,46 +138,36 @@ namespace ChatApplication.Controllers
             return Json(new { status = 400, message = "Not Fetch Data" });
         }
         [HttpPost]
-        [HttpPost]
+
         public JsonResult LoginCheck(RequestLogin login)
         {
             if (string.IsNullOrWhiteSpace(login.email) && string.IsNullOrWhiteSpace(login.password))
             {
                 return Json(new { status = 400, message = "Email and password are required" });
             }
-
             var user = db.User.FirstOrDefault(u => u.email == login.email);
             if (user == null)
             {
                 return Json(new { status = 404, message = "User not found" });
             }
-
             if (user.status != true)
             {
                 return Json(new { status = 403, message = "Your account is inactive. Please contact admin." });
             }
-
             bool isPasswordValid = BCrypt.Net.BCrypt.Verify(login.password, user.password);
             if (!isPasswordValid)
             {
                 return Json(new { status = 401, message = "Invalid password" });
             }
-
             var token = ChatApplication.Models.JwtHelper.GenerateToken(user.email, user.Id);
-
-            // Get user modules
             var userModules = GetUserModules(user.Id);
-
-            // Store user info in session
+            var userRoleName = GetUserRoleName(user.Id);
             Session["userId"] = user.Id;
             Session["userName"] = user.name;
             Session["userEmail"] = user.email;
+            Session["userRoleName"] = userRoleName;
             Session["userRole"] = user.roleId;
-
-            // Store modules in separate sessions
-            Session["moduleNames"] = userModules.Select(m => m.module_name).ToArray();
-            Session["moduleIcons"] = userModules.Select(m => m.module_icon).ToArray();
-            Session["moduleUrls"] = userModules.Select(m => m.href).ToArray();
+            Session["userModules"] = userModules;
 
             return Json(new
             {
@@ -200,10 +190,16 @@ namespace ChatApplication.Controllers
                            join u in db.User on r.Id equals u.roleId
                            where p.status == true && u.Id == userId
                            select m).ToList();
-
             return modules;
         }
-
+        public string GetUserRoleName(int userId)
+        {
+            var roleName = (from r in db.Role
+                            join u in db.User on r.Id equals u.roleId
+                            where u.Id == userId
+                            select r.role_name).FirstOrDefault();
+            return roleName;
+        }
         [HttpGet]
         public JsonResult Edit(int id)
         {

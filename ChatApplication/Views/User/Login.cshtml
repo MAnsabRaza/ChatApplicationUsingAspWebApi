@@ -69,7 +69,7 @@ ViewBag.Title = "Login";
             if (data.status === 200) {
                 alert(data.message);
                 localStorage.setItem('token', data.token);
-                window.location.href = '/Chat/Chat';
+                window.location.href = '/Home/Home';
             }
             else {
                 alert(data.message);
