@@ -132,3 +132,8 @@ D:\AspDotNet\Asp.Net Web Api MVC\ChatApplication\ChatApplication\obj\Debug\ChatA
 D:\AspDotNet\Asp.Net Web Api MVC\ChatApplication\ChatApplication\obj\Debug\ChatApplication.pdb
 D:\AspDotNet\Asp.Net Web Api MVC\ChatApplication\ChatApplication\obj\Debug\ChatApplication.Migrations.InitialCreate.resources
 D:\AspDotNet\Asp.Net Web Api MVC\ChatApplication\ChatApplication\obj\Debug\ChatApplication.csproj.GenerateResource.cache
+D:\AspDotNet\Asp.Net Web Api MVC\ChatApplication\ChatApplication\obj\Debug\ChatApplication.Migrations.addTableChat.resources
+D:\AspDotNet\Asp.Net Web Api MVC\ChatApplication\ChatApplication\bin\System.IO.Pipelines.dll
+D:\AspDotNet\Asp.Net Web Api MVC\ChatApplication\ChatApplication\bin\System.Net.Http.Json.dll
+D:\AspDotNet\Asp.Net Web Api MVC\ChatApplication\ChatApplication\bin\System.IO.Pipelines.xml
+D:\AspDotNet\Asp.Net Web Api MVC\ChatApplication\ChatApplication\bin\System.Net.Http.Json.xml

@@ -16,6 +16,7 @@ namespace ChatApplication.Models
         public DbSet<User> User { get; set; }
         public DbSet<Module> Module { get; set; }
         public DbSet<Permission> Permission { get; set; }
+        public DbSet<Chat> Chat { get; set; }
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -42,6 +43,11 @@ namespace ChatApplication.Models
                 .WithMany()
                 .HasForeignKey(p => p.moduleId)
                 .WillCascadeOnDelete(false);
+            modelBuilder.Entity<Chat>()
+               .HasRequired(p => p.User)
+               .WithMany()
+               .HasForeignKey(p => p.userId)
+               .WillCascadeOnDelete(false);
         }
     }
 }
