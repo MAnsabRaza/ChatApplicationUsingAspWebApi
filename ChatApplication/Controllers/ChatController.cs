@@ -16,8 +16,9 @@ namespace ChatApplication.Controllers
     {
         private AppDbContext db = new AppDbContext();
 
-        public ActionResult Chat()
+        public ActionResult Chat(Guid? sessionId = null)
         {
+            ViewBag.SessionId = sessionId;
             return View();
         }
 
@@ -114,6 +115,40 @@ namespace ChatApplication.Controllers
                 db.Dispose();
             }
             base.Dispose(disposing);
+        }
+
+        public JsonResult GetUserChats()
+        {
+            int userId = Convert.ToInt32(Session["userId"]);
+            var chats = db.Chat
+                .Where(c => c.userId == userId)
+                .GroupBy(c => c.sessionId)
+                .Select(g => new {
+                    SessionId = g.Key,
+                    LastMessage = g.OrderByDescending(x => x.current_date).FirstOrDefault().message,
+                    LastDate = g.OrderByDescending(x => x.current_date).FirstOrDefault().current_date
+                })
+                .OrderByDescending(x => x.LastDate)
+                .ToList();
+
+            return Json(chats, JsonRequestBehavior.AllowGet);
+        }
+
+        public JsonResult GetChatBySession(Guid sessionId)
+        {
+            int userId = Convert.ToInt32(Session["userId"]);
+            var chats = db.Chat
+               .Where(c => c.userId == userId && c.sessionId == sessionId)
+               .OrderBy(c => c.current_date)
+               .Select(c => new
+               {
+                   c.message,
+                   c.response,
+                   c.current_date
+               })
+               .ToList();
+
+            return Json(chats, JsonRequestBehavior.AllowGet);
         }
     }
 }

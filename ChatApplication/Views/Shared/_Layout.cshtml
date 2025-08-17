@@ -14,6 +14,8 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
     <!-- Toastr JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <!--Chart-->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .sidebar-link {
             transition: all 0.3s ease;
@@ -34,6 +36,56 @@
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
+
+        .chat-session {
+            cursor: pointer;
+            padding: 8px 12px;
+            margin: 4px 0;
+            border-radius: 8px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            transition: all 0.2s ease;
+        }
+
+            .chat-session:hover {
+                background: #e9ecef;
+                transform: translateX(2px);
+            }
+
+            .chat-session.active {
+                background: #007bff;
+                color: white;
+            }
+
+        .chat-preview {
+            font-size: 0.875rem;
+            color: #6c757d;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
+
+        .chat-session.active .chat-preview {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .new-chat-btn {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 16px;
+        }
+
+            .new-chat-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+            }
     </style>
 </head>
 <body class="bg-gradient-to-br from-gray-100 to-gray-200 flex flex-col min-h-screen">
@@ -52,7 +104,6 @@
                         <div class="flex items-center space-x-3 glass-effect px-4 py-2 rounded-full">
                             <i class="fas fa-user-circle text-lg"></i>
                             <span class="text-lg font-medium">Welcome, @Session["userName"]</span>
-
                         </div>
                     }
                 </ul>
@@ -65,7 +116,7 @@
             <div class="mb-8">
                 @if (Session["userRoleName"] != null)
                 {
-                    <h2 class="text-lg font-semibold text-gray-800 mb-4 ml-1">@Session["userRoleName"]</h2>
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4 ml-1">@Session["userRoleName"], @Session["userName"]</h2>
                 }
             </div>
             <ul class="space-y-3">
@@ -129,6 +180,26 @@
                         </ul>
                     </li>
                 }
+
+                <!-- Chat Sessions Section -->
+                <li class="pt-4 border-t border-gray-300 mt-6">
+                    <div class="text-gray-600 mb-3">
+                        <div class="flex justify-between items-center">
+                            <h5 class="font-semibold">Chats</h5>
+                            <button onclick="startNewChat()" class="text-blue-600 hover:text-blue-800" title="New Chat">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button onclick="startNewChat()" class="new-chat-btn">
+                        <i class="fas fa-plus mr-2"></i>
+                        New Chat
+                    </button>
+                    <div class="max-h-64 overflow-y-auto">
+                        <ul id="chatSessions"></ul>
+                    </div>
+                </li>
+
                 <li class="pt-4 border-t border-gray-300 mt-6">
                     <a href="@Url.Action("Logout", "User")"
                        class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 hover:text-red-700 font-medium transition-all duration-300">
@@ -138,7 +209,6 @@
                 </li>
             </ul>
         </aside>
-
 
         <main class="flex-1 p-8 bg-gray-100">
             @RenderBody()
@@ -158,46 +228,122 @@
             $(this).find("i.fa-chevron-down, i.fa-chevron-up").toggleClass("fa-chevron-down fa-chevron-up");
         });
 
-    $(document).ready(function () {
-        var currentPath = window.location.pathname;
-        $('.sidebar-link').each(function() {
-            if ($(this).attr('href') === currentPath) {
-                $(this).addClass('active-link');
-            }
-        });
-        document.addEventListener('DOMContentLoaded', function () {
-            const settingsToggle = document.querySelector('.settings-toggle');
-            const settingsMenu = document.querySelector('.settings-menu');
-            const chevronIcon = settingsToggle?.querySelector('.fa-chevron-down');
+        let currentSessionId = null;
 
-            if (settingsToggle && settingsMenu) {
-                settingsToggle.addEventListener('click', function () {
-                    settingsMenu.classList.toggle('hidden');
-                    if (chevronIcon) {
-                        chevronIcon.classList.toggle('rotate-180');
-                    }
+        async function loadChats() {
+            try {
+                const res = await fetch("/Chat/GetUserChats");
+                const chats = await res.json();
+                let list = "";
+
+                // Get current session ID from URL if on chat page
+                const urlParams = new URLSearchParams(window.location.search);
+                const urlSessionId = urlParams.get('sessionId');
+
+                chats.forEach(c => {
+                    const isActive = urlSessionId === c.SessionId ? 'active' : '';
+                    const truncatedMessage = c.LastMessage.length > 30
+                        ? c.LastMessage.substring(0, 30) + '...'
+                        : c.LastMessage;
+
+                    list += `
+                        <li class="chat-session ${isActive}" onclick="loadSession('${c.SessionId}')">
+                            <div class="font-medium text-sm">${escapeHtml(truncatedMessage)}</div>
+                        </li>`;
                 });
+
+                document.getElementById("chatSessions").innerHTML = list;
+            } catch (error) {
+                console.error('Error loading chats:', error);
+            }
+        }
+
+        function loadSession(sessionId) {
+            // Remove active class from all sessions
+            document.querySelectorAll('.chat-session').forEach(session => {
+                session.classList.remove('active');
+            });
+
+            // Add active class to clicked session
+            event.target.closest('.chat-session').classList.add('active');
+
+            // Navigate to chat page with session ID
+            window.location.href = `/Chat/Chat?sessionId=${sessionId}`;
+        }
+
+        function startNewChat() {
+            // Remove active class from all sessions
+            document.querySelectorAll('.chat-session').forEach(session => {
+                session.classList.remove('active');
+            });
+
+            // Navigate to new chat
+            window.location.href = '/Chat/Chat';
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+            if (days === 0) return 'Today';
+            if (days === 1) return 'Yesterday';
+            if (days < 7) return `${days} days ago`;
+
+            return date.toLocaleDateString();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Load chats when page loads
+        loadChats();
+
+        $(document).ready(function () {
+            var currentPath = window.location.pathname;
+            $('.sidebar-link').each(function() {
+                if ($(this).attr('href') === currentPath) {
+                    $(this).addClass('active-link');
+                }
+            });
+
+            document.addEventListener('DOMContentLoaded', function () {
+                const settingsToggle = document.querySelector('.settings-toggle');
+                const settingsMenu = document.querySelector('.settings-menu');
+                const chevronIcon = settingsToggle?.querySelector('.fa-chevron-down');
+
+                if (settingsToggle && settingsMenu) {
+                    settingsToggle.addEventListener('click', function () {
+                        settingsMenu.classList.toggle('hidden');
+                        if (chevronIcon) {
+                            chevronIcon.classList.toggle('rotate-180');
+                        }
+                    });
+                }
+            });
+
+            @if (TempData["ToastrMessage"] != null)
+            {
+                <text>
+                    toastr.options = {
+                        "closeButton": true,
+                        "progressBar": true,
+                        "positionClass": "toast-top-right",
+                        "timeOut": "3000",
+                        "extendedTimeOut": "1000",
+                        "showEasing": "swing",
+                        "hideEasing": "linear",
+                        "showMethod": "fadeIn",
+                        "hideMethod": "fadeOut"
+                    };
+                    toastr["@TempData["ToastrType"]"]("@TempData["ToastrMessage"]");
+                </text>
             }
         });
-
-        @if (TempData["ToastrMessage"] != null)
-        {
-            <text>
-                toastr.options = {
-                    "closeButton": true,
-                    "progressBar": true,
-                    "positionClass": "toast-top-right",
-                    "timeOut": "3000",
-                    "extendedTimeOut": "1000",
-                    "showEasing": "swing",
-                    "hideEasing": "linear",
-                    "showMethod": "fadeIn",
-                    "hideMethod": "fadeOut"
-                };
-                toastr["@TempData["ToastrType"]"]("@TempData["ToastrMessage"]");
-            </text>
-        }
-    });
     </script>
 </body>
 </html>

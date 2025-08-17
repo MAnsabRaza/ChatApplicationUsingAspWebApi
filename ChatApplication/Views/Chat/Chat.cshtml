@@ -6,6 +6,8 @@
         <h2 class="text-center font-semibold text-2xl">How can I help?</h2>
     </div>
 
+
+
     <div class="p-4 bg-white border-t shadow-md">
         <div class="relative flex items-center">
             <input type="text" id="userInput"
@@ -19,12 +21,45 @@
         </div>
     </div>
     <div id="chatBox" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
+        <!-- Chat messages will be loaded here -->
     </div>
 </div>
 
 <script>
-    let sessionId = null;
+    let sessionId = '@ViewBag.SessionId' || null;
     let isLoading = false;
+
+    // Load existing chat if sessionId is provided
+    window.onload = async function() {
+        if (sessionId && sessionId !== '') {
+            await loadExistingChat(sessionId);
+        }
+    };
+
+    async function loadExistingChat(sessionId) {
+        try {
+            const response = await fetch(`/Chat/GetChatBySession?sessionId=${sessionId}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const chatHistory = await response.json();
+            const chatBox = document.getElementById("chatBox");
+            chatBox.innerHTML = ''; // Clear existing messages
+
+            chatHistory.forEach(chat => {
+                // Display user message
+                appendMessage("You", chat.message, "bg-blue-500 text-white ml-auto");
+                // Display AI response
+                appendMessage("AI", chat.response, "bg-gray-200 text-gray-800 mr-auto");
+            });
+
+            chatBox.scrollTop = chatBox.scrollHeight;
+        } catch (error) {
+            console.error('Error loading chat history:', error);
+            appendMessage("System", "Error loading chat history", "bg-red-200 text-red-800 mr-auto");
+        }
+    }
 
     async function sendMessage() {
         if (isLoading) return;
@@ -63,6 +98,11 @@
             } else {
                 sessionId = data.sessionId;
                 appendMessage("AI", data.response, "bg-gray-200 text-gray-800 mr-auto");
+
+                // Update URL without page reload to reflect current session
+                if (window.history.replaceState) {
+                    window.history.replaceState({}, '', `/Chat/Chat?sessionId=${sessionId}`);
+                }
             }
 
         } catch (error) {
@@ -81,7 +121,11 @@
         const chatBox = document.getElementById("chatBox");
         const div = document.createElement("div");
         div.className = `max-w-2xl px-4 py-2 rounded-2xl shadow ${classes}`;
-        div.innerHTML = `<p>${escapeHtml(text)}</p>`;
+
+        // Format the message text (preserve line breaks, etc.)
+        const formattedText = text.replace(/\n/g, '<br>');
+        div.innerHTML = `<strong>${escapeHtml(sender)}:</strong><br>${formattedText}`;
+
         chatBox.appendChild(div);
         chatBox.scrollTop = chatBox.scrollHeight;
         return div;
@@ -91,5 +135,17 @@
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    // Start new chat function (can be called from sidebar)
+    function startNewChat() {
+        sessionId = null;
+        document.getElementById("chatBox").innerHTML = '';
+        document.getElementById("userInput").focus();
+
+        // Update URL to remove sessionId
+        if (window.history.replaceState) {
+            window.history.replaceState({}, '', '/Chat/Chat');
+        }
     }
 </script>
