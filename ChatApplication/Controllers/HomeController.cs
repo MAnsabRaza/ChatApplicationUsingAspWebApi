@@ -18,15 +18,18 @@ namespace ChatApplication.Controllers
             ViewBag.TotalChats = db.Chat.Count();
 
             var chartData = db.Chat
-       .GroupBy(c => DbFunctions.TruncateTime(c.current_date)) 
-       .Select(g => new
-       {
-           Date = g.Key.Value,
-           Count = g.Count()
-       })
-       .ToList();
-            ViewBag.ChartLabels = string.Join(",", chartData.Select(x => "'" + x.Date.ToString("yyyy-MM-dd") + "'"));
+            .GroupBy(c => new { c.current_date.Year, c.current_date.Month })
+            .Select(g => new
+            {
+            Month = g.Key.Month,
+            Year = g.Key.Year,
+            Count = g.Count()
+            })
+            .OrderBy(x => x.Year).ThenBy(x => x.Month)
+            .ToList();
+            ViewBag.ChartLabels = string.Join(",", chartData.Select(x => "'" + new DateTime(x.Year, x.Month, 1).ToString("MMM-yyyy") + "'"));
             ViewBag.ChartCounts = string.Join(",", chartData.Select(x => x.Count));
+
 
             return View();
         }

@@ -64,12 +64,12 @@ namespace ChatApplication.Controllers
                     var body = new
                     {
                         contents = new[] {
-                            new {
-                                parts = new[] {
-                                    new { text = prompt }
-                                }
-                            }
+                    new {
+                        parts = new[] {
+                            new { text = prompt }
                         }
+                    }
+                }
                     };
 
                     string jsonBody = JsonConvert.SerializeObject(body);
@@ -107,6 +107,39 @@ namespace ChatApplication.Controllers
                 return $"Error calling AI service: {ex.Message}";
             }
         }
+        private async Task<string> CallPythonApi(string prompt)
+        {
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri("http://localhost:5000/"); // Flask server
+
+                    var body = new { prompt = prompt };
+                    string jsonBody = JsonConvert.SerializeObject(body);
+                    var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
+
+                    var response = await client.PostAsync("generate", content);
+                    var result = await response.Content.ReadAsStringAsync();
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        return $"API Error: {response.StatusCode} - {result}";
+                    }
+
+                    // Flask returns an array, so deserialize into list
+                    var json = JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(result);
+                    string responseText = json?[0]?["generated_text"];
+
+                    return !string.IsNullOrEmpty(responseText) ? responseText : "No response from AI";
+                }
+            }
+            catch (Exception ex)
+            {
+                return $"Error calling Python API: {ex.Message}";
+            }
+        }
+
 
         protected override void Dispose(bool disposing)
         {
